@@ -86,25 +86,30 @@ def monitor_distance():
             continue
 
         if last_sent_distance is None:
+            # First reading since boot: nothing to compare against yet, so report it as-is.
             last_sent_distance = distance
             send_metric(distance)
         elif abs(distance - last_sent_distance) > DISTANCE_CHANGE_THRESHOLD_MM:
             print("Distance change detected:", distance, "mm (last sent:", last_sent_distance, "mm)")
 
             if candidate_distance is not None and abs(distance - candidate_distance) <= DISTANCE_CHANGE_THRESHOLD_MM:
+                # Still within range of the candidate value from a previous iteration: one step closer to confirming it.
                 candidate_count += 1
             else:
+                # A different (or first) candidate value: restart the stability count for it.
                 candidate_distance = distance
                 candidate_count = 1
 
             print("Stability check:", candidate_count, "of", REQUIRED_STABLE_READINGS, "readings seen at", candidate_distance, "mm")
 
             if candidate_count >= REQUIRED_STABLE_READINGS:
+                # Candidate has held steady for long enough to trust it's a real change, not noise.
                 last_sent_distance = candidate_distance
                 send_metric(candidate_distance)
                 candidate_distance = None
                 candidate_count = 0
         else:
+            # Back within the threshold of the last sent value: drop any in-progress candidate.
             candidate_distance = None
             candidate_count = 0
 
