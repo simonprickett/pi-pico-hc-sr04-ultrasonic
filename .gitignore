@@ -1,0 +1,18 @@
+# MicroPython / Pico
+*.pyc
+__pycache__/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Env / secrets
+.env
+secrets.py
+
+# Build / misc
+*.log
