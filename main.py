@@ -46,7 +46,7 @@ def set_ntp_time():
 
 
 def send_metric(distance_mm):
-    print("Sending metric:", METRIC_NAME, "=", distance_mm, "label:", SENSOR_LABEL)
+    print("Sending metric to Grafana Cloud:", METRIC_NAME, "=", distance_mm, "label:", SENSOR_LABEL)
 
     payload = PrometheusRemoteWritePayload()
     payload.add_data(
@@ -65,8 +65,8 @@ def send_metric(distance_mm):
         data=payload.get_payload(),
     )
 
-    print(response.status_code)
-    print(response.text)
+    print("Grafana Cloud response status:", response.status_code)
+    print("Grafana Cloud response body:", response.text)
     response.close()
 
 
@@ -89,11 +89,15 @@ def monitor_distance():
             last_sent_distance = distance
             send_metric(distance)
         elif abs(distance - last_sent_distance) > DISTANCE_CHANGE_THRESHOLD_MM:
+            print("Distance change detected:", distance, "mm (last sent:", last_sent_distance, "mm)")
+
             if candidate_distance is not None and abs(distance - candidate_distance) <= DISTANCE_CHANGE_THRESHOLD_MM:
                 candidate_count += 1
             else:
                 candidate_distance = distance
                 candidate_count = 1
+
+            print("Stability check:", candidate_count, "of", REQUIRED_STABLE_READINGS, "readings seen at", candidate_distance, "mm")
 
             if candidate_count >= REQUIRED_STABLE_READINGS:
                 last_sent_distance = candidate_distance
